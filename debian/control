@@ -1,0 +1,44 @@
+Source: libarctica-services-audio-streamer-pulseaudio2gst-perl
+Section: perl
+Priority: optional
+Build-Depends:
+ cdbs,
+ debhelper (>= 9),
+Build-Depends-Indep:
+ perl (>= 5.8.0),
+Maintainer: Arctica Project Developers <devs@lists.arctica-project.org>
+Uploaders:
+ Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+Homepage: https://arctica-project.org/
+Vcs-Git: https://github.com/ArcticaProject/perl-Arctica-Services-Audio-Streamer-PulseAudio2GST
+Vcs-Browser: https://github.com/ArcticaProject/perl-Arctica-Services-Audio-Streamer-PulseAudio2GST
+Standards-Version: 3.9.8
+
+Package: libarctica-services-audio-streamer-pulseaudio2gst-perl
+Architecture: all
+Depends:
+ ${perl:Depends},
+ ${misc:Depends},
+Description: Arctica Service: Audio::Streamer::PulseAudio2GST
+ The Arctica Project brings forth a remote computing framework of
+ enterprise grade and quality. The Arctica Framework is a highly
+ modularized and thus pluggable for developing alls sort of remote
+ services.
+ .
+ This package provides a server-side component that streams data to and
+ from PulseAudio via GStreamer.
+
+Package: arctica-testserver-pulseaudio2gst
+Architecture: all
+Depends:
+ ${perl:Depends},
+ ${misc:Depends},
+ libarctica-services-audio-streamer-pulseaudio2gst-perl (= ${binary:Version}),
+Description: Arctica Service: Audio::Streamer::PulseAudio2GST (test server)
+ The Arctica Project brings forth a remote computing framework of
+ enterprise grade and quality. The Arctica Framework is a highly
+ modularized and thus pluggable for developing alls sort of remote
+ services.
+ .
+ This package provides a standalone testserver that sets up a server-side
+ pulseaudio <-> gstreamer streamer instance.
