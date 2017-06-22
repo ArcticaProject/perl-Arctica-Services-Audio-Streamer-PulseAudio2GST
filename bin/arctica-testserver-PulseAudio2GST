@@ -1,0 +1,108 @@
+#!/usr/bin/perl  -T -I /audiotest/perlmodules/
+################################################################################
+#          _____ _
+#         |_   _| |_  ___
+#           | | | ' \/ -_)
+#           |_| |_||_\___|
+#                   _   _             ____            _           _
+#    / \   _ __ ___| |_(_) ___ __ _  |  _ \ _ __ ___ (_) ___  ___| |_
+#   / _ \ | '__/ __| __| |/ __/ _` | | |_) | '__/ _ \| |/ _ \/ __| __|
+#  / ___ \| | | (__| |_| | (_| (_| | |  __/| | | (_) | |  __/ (__| |_
+# /_/   \_\_|  \___|\__|_|\___\__,_| |_|   |_|  \___// |\___|\___|\__|
+#                                                  |__/
+#          The Arctica Modular Remote Computing Framework
+#
+################################################################################
+#
+# Copyright (C) 2015-2016 The Arctica Project
+# http://arctica-project.org/
+#
+# This code is dual licensed: strictly GPL-2 or AGPL-3+
+#
+# GPL-2
+# -----
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the
+# Free Software Foundation, Inc.,
+#
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# AGPL-3+
+# -------
+# This programm is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This programm is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program; if not, write to the
+# Free Software Foundation, Inc.,
+# 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# Copyright (C) 2015-2017 Guangzhou Nianguan Electronics Technology Co.Ltd.
+#                         <opensource@gznianguan.com>
+# Copyright (C) 2015-2017 Mike Gabriel <mike.gabriel@das-netzwerkteam.de>
+#
+################################################################################
+use warnings;
+use strict;
+use Glib;
+use Arctica::Core::eventInit qw(BugOUT);
+use Arctica::Services::Audio::Streamer::PulseAudio2GST::ThreadGST_server;
+use Data::Dumper;
+
+my $ACO = Arctica::Core::eventInit->new({
+	app_name=>'thread_gst',
+	app_class =>'sub_services',
+	app_version=>'0.0.1.1'});
+
+my $TheGST = Arctica::Services::Audio::Streamer::PulseAudio2GST::ThreadGST_server->new($ACO,\@ARGV);
+
+my $the_loopey = Glib::MainLoop->new;
+STDIN->autoflush(1);
+STDOUT->autoflush(1);
+STDERR->autoflush(1);
+Glib::IO->add_watch (fileno('STDIN'), [qw/in/], \&watch_stdin, 'STDIN');
+#Glib::Timeout->add (1000, \&assassin, undef, 1 );# FIXME Don't forget to make orphans selfterminating
+
+$TheGST->start;
+
+$the_loopey->run;# for the hills (Eddie)?
+
+sub watch_stdin {
+	my ($fd, $condition, $fh) = @_;
+	my $line = readline($fh);
+	$line =~ s/\n//g;
+	if ((length($line) > 0) and ($condition eq "in")) {
+		if ($line =~ /^cmd:([a-z]*)\:(.*)$/) {
+			if ($1 eq "stop") {
+				$TheGST->terminate;
+				BugOUT(2,"Terminating... (We got 'cmd:stop:')");
+				exit; 
+			} elsif ($1 eq "ready") {
+# FIXME NOT IN USE ANYMORE?
+			} else {
+				BugOUT(1,"WTF: '$1' ? ");
+			}
+		} elsif ($line =~ /^set:([a-z\_\-\d]*)\:(.*)$/) {
+			$TheGST->ch_options($1,$2);
+		}
+	}
+
+	return 1;
+}
+
